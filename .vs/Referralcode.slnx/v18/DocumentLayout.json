@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\edroe\\source\\repos\\Referralcode\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{4750A101-FB79-8F99-AD36-53CB40EBE1E4}|Referralcode.csproj|c:\\users\\edroe\\source\\repos\\referralcode\\controllers\\referralcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4750A101-FB79-8F99-AD36-53CB40EBE1E4}|Referralcode.csproj|solutionrelative:controllers\\referralcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ReferralController.cs",
+              "DocumentMoniker": "C:\\Users\\edroe\\source\\repos\\Referralcode\\Controllers\\ReferralController.cs",
+              "RelativeDocumentMoniker": "Controllers\\ReferralController.cs",
+              "ToolTip": "C:\\Users\\edroe\\source\\repos\\Referralcode\\Controllers\\ReferralController.cs",
+              "RelativeToolTip": "Controllers\\ReferralController.cs",
+              "ViewState": "AgIAAKUAAAAAAAAAAAAAALYAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-26T01:49:18.447Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

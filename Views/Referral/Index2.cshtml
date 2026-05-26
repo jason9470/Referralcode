@@ -1,0 +1,222 @@
+@model Referralcode.ViewModels.ReferralQueryViewModel
+
+@{
+    ViewData["Title"] = "推薦碼查詢";
+}
+
+<div class="container mt-4 pb-5">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+        <h3 class="mb-0 text-dark fw-bold">
+            <i class="bi bi-person-badge-fill text-primary"></i> 推薦碼管理系統
+        </h3>
+        <nav class="nav">
+            <a class="nav-link text-muted px-3" href="/Referral/Create">推薦碼建立</a>
+            <a class="nav-link active fw-bold text-primary border-bottom border-primary border-3 px-3" href="/Referral/Index2">編輯與刪除</a>
+            <a class="nav-link text-muted px-3" href="/Referral/Index">推薦碼查詢</a>
+        </nav>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- 頁籤切換 -->
+    <ul class="nav nav-pills mb-4" id="queryTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(Model.QueryType == "MG" ? "active" : "bg-light text-dark border")" id="mg-tab" data-bs-toggle="pill" data-bs-target="#mg-content" type="button" role="tab" onclick="setQueryType('MG')">MGM 複合查詢</button>
+        </li>
+        <li class="nav-item ms-2" role="presentation">
+            <button class="nav-link @(Model.QueryType == "BCBE" ? "active" : "bg-light text-dark border")" id="bcbe-tab" data-bs-toggle="pill" data-bs-target="#bcbe-content" type="button" role="tab" onclick="setQueryType('BCBE')">特約商與異業合作 複合查詢</button>
+        </li>
+    </ul>
+
+    <div class="bg-white p-4 rounded-3 border">
+        <form asp-action="Index2" method="get" id="queryForm">
+            <input type="hidden" asp-for="QueryType" id="HiddenQueryType" />
+
+            @if (Model.QueryType == "BCBE")
+            {
+                <div class="row mb-4 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fw-bold mb-1">專案起迄日</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="date" asp-for="SearchStartDate" class="form-control" />
+                            <span class="text-muted fw-bold">~</span>
+                            <input type="date" asp-for="SearchEndDate" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fw-bold mb-1">推薦碼</label>
+                        <input type="text" asp-for="SearchReferralCode" class="form-control" placeholder="輸入推薦碼" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fw-bold mb-1">廠商統編</label>
+                        <input type="text" asp-for="SearchPartnerId" class="form-control" placeholder="輸入統編" />
+                    </div>
+                </div>
+                <div class="row mb-4 align-items-end">                    
+                    <div class="col-md-8">
+                        <label class="form-label text-muted fw-bold mb-1">專案代碼複選</label>
+                        <div class="d-flex gap-3 mt-1">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" asp-for="IncludeBC" id="chkBC">
+                                <label class="form-check-label fw-bold" for="chkBC">BC(特約商)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" asp-for="IncludeBE" id="chkBE">
+                                <label class="form-check-label fw-bold" for="chkBE">BE(異業合作)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-warning px-4 fw-bold action-btn" style="display: none;" onclick="editSelected()">編輯</button>
+                            <button type="button" class="btn btn-danger px-4 fw-bold action-btn" style="display: none;" onclick="deleteSelected()">刪除</button>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold" style="background-color: #0d2b54; border-color: #0d2b54;">執行查詢</button>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row mb-4 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fw-bold mb-1">專案起迄日</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="date" asp-for="SearchStartDate" class="form-control" />
+                            <span class="text-muted fw-bold">~</span>
+                            <input type="date" asp-for="SearchEndDate" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fw-bold mb-1">推薦碼</label>
+                        <input type="text" asp-for="SearchReferralCode" class="form-control" placeholder="輸入推薦碼" />
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-warning px-4 fw-bold action-btn" style="display: none;" onclick="editSelected()">編輯</button>
+                            <button type="button" class="btn btn-danger px-4 fw-bold action-btn" style="display: none;" onclick="deleteSelected()">刪除</button>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold" style="background-color: #0d2b54; border-color: #0d2b54;">執行查詢</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </form>
+
+        <hr class="my-4" />
+
+        <form method="post" asp-action="Delete" id="deleteForm">
+            <input type="hidden" name="QueryType" value="@Model.QueryType" />
+            <!-- 查詢結果表格 -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover text-center align-middle">
+                    <thead class="table-dark" style="background-color: #000; color: #fff;">
+                        @if (Model.QueryType == "MG")
+                        {
+                            <tr>
+                                <th style="width: 50px;">選取</th>
+                                <th>開始日期</th>
+                                <th>結束日期</th>
+                                <th>分公司</th>
+                                <th>推薦碼</th>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <th style="width: 50px;">選取</th>
+                                <th>專案代碼</th>
+                                <th>分公司</th>
+                                <th>公司名稱</th>
+                                <th>廠商統編</th>
+                                <th>推薦碼</th>
+                                <th>專案開始日</th>
+                                <th>專案結束日</th>
+                            </tr>
+                        }
+                    </thead>
+                    <tbody>
+                        @if (Model.Results != null && Model.Results.Any())
+                        {
+                            foreach (var item in Model.Results)
+                            {
+                                if (Model.QueryType == "MG")
+                                {
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input row-checkbox" name="selectedIds" value="@item.Id" onchange="toggleActionButtons()" />
+                                        </td>
+                                        <td>@(item.StartDate?.ToString("yyyy-MM-dd"))</td>
+                                        <td>@(item.EndDate?.ToString("yyyy-MM-dd"))</td>
+                                        <td>@(string.IsNullOrEmpty(item.BranchName) ? "部分公司" : item.BranchName)</td>
+                                        <td>@item.PartnerReferralCode</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input row-checkbox" name="selectedIds" value="@item.Id" onchange="toggleActionButtons()" />
+                                        </td>
+                                        <td>@(item.ProjectCode?.Contains("-") == true ? item.ProjectCode.Split('-').Last() : item.ProjectCode)</td>
+                                        <td>@item.BranchName</td>
+                                        <td>@item.PartnerName</td>
+                                        <td>@item.PartnerId</td>
+                                        <td>@item.PartnerReferralCode</td>
+                                        <td>@(item.StartDate?.ToString("yyyy/M/d"))</td>
+                                        <td>@(item.EndDate?.ToString("yyyy/M/d"))</td>
+                                    </tr>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="@(Model.QueryType == "MG" ? 5 : 8)" class="text-muted py-4">查無符合條件的推薦碼資料。</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function setQueryType(type) {
+            document.getElementById('HiddenQueryType').value = type;
+            document.getElementById('queryForm').submit();
+        }
+
+        function toggleActionButtons() {
+            var anyChecked = $('.row-checkbox:checked').length > 0;
+            if (anyChecked) {
+                $('.action-btn').show();
+            } else {
+                $('.action-btn').hide();
+            }
+        }
+
+        function editSelected() {
+            var selectedIds = $('.row-checkbox:checked').map(function() { return this.value; }).get();
+            if (selectedIds.length > 1) {
+                alert("只能選擇一筆資料進行編輯");
+                return;
+            }
+            if (selectedIds.length === 1) {
+                window.location.href = '/Referral/Edit/' + selectedIds[0];
+            }
+        }
+
+        function deleteSelected() {
+            if (confirm('確定要刪除選取的資料嗎？')) {
+                $('#deleteForm').submit();
+            }
+        }
+    </script>
+}

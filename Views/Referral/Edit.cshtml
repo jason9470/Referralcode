@@ -1,0 +1,184 @@
+@model Referralcode.Models.ReferralApplication
+
+@{
+    ViewData["Title"] = "推薦碼編輯";
+}
+
+<div class="container mt-4 pb-5">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+        <h3 class="mb-0 text-dark fw-bold">
+            <i class="bi bi-pencil-square text-primary"></i> 推薦碼編輯
+        </h3>
+        <nav class="nav">
+            <a class="nav-link text-muted px-3" href="/Referral/Create">推薦碼建立</a>
+            <a class="nav-link active fw-bold text-primary border-bottom border-primary border-3 px-3" href="/Referral/Index2">編輯與刪除</a>
+            <a class="nav-link text-muted px-3" href="/Referral/Index">推薦碼查詢</a>
+        </nav>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="bg-white p-0 rounded-3">
+        <form asp-action="Edit" method="post" id="referralForm" class="needs-validation" novalidate>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="ProjectType" id="HiddenProjectType" />
+            
+            <div class="bg-white p-4 rounded-3 border">
+                @if (Model.ProjectType == "A")
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="ProjectCode" class="form-label text-muted fw-bold mb-1">專案代碼</label>
+                            <input asp-for="ProjectCode" class="form-control bg-light border" readonly required />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="PartnerReferralCode" class="form-label text-muted fw-bold mb-1">推薦碼</label>
+                            <input asp-for="PartnerReferralCode" class="form-control bg-light border" readonly />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fw-bold mb-1">專案起迄日</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="date" asp-for="StartDate" class="form-control" required value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+                                <span class="text-muted fw-bold">至</span>
+                                <input type="date" asp-for="EndDate" class="form-control" required value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="invalid-feedback">請填寫完整的專案起迄日。</div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold mb-1">專案代碼</label>
+                            <input asp-for="ProjectCode" id="TypeB_ProjectCode" class="form-control bg-light border" readonly required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold mb-1">專案起迄日</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="date" asp-for="StartDate" class="form-control border" required value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+                                <span class="text-muted fw-bold">至</span>
+                                <input type="date" asp-for="EndDate" class="form-control border" required value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div class="invalid-feedback">請填寫完整的專案起迄日。</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="BranchName" class="form-label text-muted fw-bold mb-1">分公司名稱</label>
+                            <input asp-for="BranchName" class="form-control border" placeholder="例如：經紀部分公司" readonly required />
+                            <div class="invalid-feedback">此欄位為必填。</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PartnerName" class="form-label text-muted fw-bold mb-1">合作廠商名稱</label>
+                            <input asp-for="PartnerName" class="form-control border" placeholder="例如：元大金控" readonly required />
+                            <div class="invalid-feedback">此欄位為必填。</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="PartnerId" class="form-label text-muted fw-bold mb-1">廠商統編</label>
+                            <input asp-for="PartnerId" class="form-control border" placeholder="例如：97160609" readonly required />
+                            <div class="invalid-feedback">此欄位為必填。</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PartnerReferralCode" class="form-label text-muted fw-bold mb-1">推薦碼 (8碼)</label>
+                            <input asp-for="PartnerReferralCode" id="PartnerReferralCode" class="form-control border" placeholder="例如：BC288526" minlength="8" maxlength="8" readonly required />
+                            <div class="invalid-feedback" id="referralCodeFeedback">推薦碼必須為8碼，且前兩碼需符合專案代碼。</div>
+                            <span asp-validation-for="PartnerReferralCode" class="text-danger fw-bold d-block mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3" id="discountConditionRow">
+                        <div class="col-md-6">
+                            <label asp-for="DiscountCondition" class="form-label text-muted fw-bold mb-1">折讓條件</label>
+                            <input asp-for="DiscountCondition" class="form-control border" placeholder="例如：退57,000元，約當6折" readonly required />
+                            <div class="invalid-feedback">此欄位為必填。</div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="text-end mt-4">
+                <a href="/Referral/Index2" class="btn btn-secondary px-4 py-2 fw-bold me-2">取消</a>
+                <button type="submit" class="btn btn-primary px-5 py-2 fw-bold text-white shadow" style="background-color: #0056b3; border-color: #0056b3;">
+                    <i class="bi bi-save-fill me-1"></i> 儲存變更
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleDiscountCondition() {
+            if ($('#TypeB_ProjectCode').val() === '金融特約商-BC') {
+                $('#discountConditionRow').show();
+                $('#discountConditionRow :input').prop('disabled', false);
+            } else {
+                $('#discountConditionRow').hide();
+                $('#discountConditionRow :input').prop('disabled', true);
+            }
+        }
+
+        $(document).ready(function() {
+            if ($('#HiddenProjectType').val() === 'B') {
+                $('#TypeB_ProjectCode').change(toggleDiscountCondition);
+                toggleDiscountCondition();
+                
+                // Custom validation for Referral Code Prefix
+                function validateReferralCode() {
+                    var projectCode = $('#TypeB_ProjectCode').val();
+                    var referralInput = $('#PartnerReferralCode');
+                    var val = referralInput.val();
+                    
+                    if (val.length === 8) {
+                        if (projectCode === '金融特約商-BC' && !val.startsWith('BC')) {
+                            referralInput[0].setCustomValidity("必須以 BC 開頭");
+                            $('#referralCodeFeedback').text("金融特約商的推薦碼必須以 BC 開頭，且總共為 8 碼");
+                        } else if (projectCode === '異業合作-BE' && !val.startsWith('BE')) {
+                            referralInput[0].setCustomValidity("必須以 BE 開頭");
+                            $('#referralCodeFeedback').text("異業合作的推薦碼必須以 BE 開頭，且總共為 8 碼");
+                        } else {
+                            referralInput[0].setCustomValidity(""); // Valid
+                        }
+                    } else {
+                        referralInput[0].setCustomValidity("長度必須為 8 碼");
+                        $('#referralCodeFeedback').text("推薦碼必須剛好為 8 碼");
+                    }
+                }
+
+                $('#PartnerReferralCode').on('input', validateReferralCode);
+                $('#TypeB_ProjectCode').change(function() {
+                    if ($('#PartnerReferralCode').val().length > 0) {
+                         validateReferralCode();
+                    }
+                });
+            }
+
+            // Bootstrap custom validation
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if ($('#HiddenProjectType').val() === 'B') {
+                             validateReferralCode();
+                        }
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                });
+        });
+    </script>
+}
