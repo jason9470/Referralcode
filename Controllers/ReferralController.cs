@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Referralcode.Data;
 using Referralcode.Models;
 using Referralcode.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Referralcode.Controllers
 {
+    [Authorize]
     public class ReferralController : Controller
     {
         private readonly AppDbContext _context;
