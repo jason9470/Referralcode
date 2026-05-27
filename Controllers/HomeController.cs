@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Referralcode.Data;
 using Referralcode.Models;
 using Referralcode.ViewModels;
@@ -42,7 +43,7 @@ namespace Referralcode.Controllers
                 string errorMessage = "帳號或密碼錯誤";
 
                 // 先比對資料庫是否存在該帳號密碼
-                var account = _context.SystemAccounts.FirstOrDefault(a => a.Username == model.Username && a.Password == model.Password);
+                var account = await _context.SystemAccounts.FirstOrDefaultAsync(a => a.Username == model.Username && a.Password == model.Password);
 
                 // 從設定檔讀取預設管理員帳號與加密的密碼
                 var adminUsername = _configuration["AdminCredentials:Username"];
@@ -137,27 +138,27 @@ namespace Referralcode.Controllers
 
         // 這裡將原本的 Privacy 改成帳號管理平台
         [Authorize]
-        public IActionResult Privacy()
+        public async Task<IActionResult> Privacy()
         {
-            var accounts = _context.SystemAccounts.OrderByDescending(a => a.CreatedAt).ToList();
+            var accounts = await _context.SystemAccounts.AsNoTracking().OrderByDescending(a => a.CreatedAt).ToListAsync();
             return View(accounts);
         }
 
         [HttpPost]
         [Authorize]
-        public IActionResult AddAccount(string username)
+        public async Task<IActionResult> AddAccount(string username)
         {
             if (!string.IsNullOrWhiteSpace(username))
             {
                 // 檢查是否已經有同名的帳號
-                if (!_context.SystemAccounts.Any(a => a.Username == username))
+                if (!await _context.SystemAccounts.AnyAsync(a => a.Username == username))
                 {
                     _context.SystemAccounts.Add(new SystemAccount
                     {
                         Username = username,
                         Password = "123456" // 預設密碼 123456
                     });
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = $"帳號 {username} 新增成功！";
                 }
                 else
@@ -170,13 +171,13 @@ namespace Referralcode.Controllers
 
         [HttpPost]
         [Authorize]
-        public IActionResult DeleteAccount(int id)
+        public async Task<IActionResult> DeleteAccount(int id)
         {
-            var account = _context.SystemAccounts.Find(id);
+            var account = await _context.SystemAccounts.FindAsync(id);
             if (account != null)
             {
                 _context.SystemAccounts.Remove(account);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"帳號 {account.Username} 已刪除。";
             }
             return RedirectToAction("Privacy");

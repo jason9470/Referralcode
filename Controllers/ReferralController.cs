@@ -20,7 +20,7 @@ namespace Referralcode.Controllers
         // GET: Referral/Index (查詢頁面)
         public async Task<IActionResult> Index(ReferralQueryViewModel vm)
         {
-            var query = _context.ReferralApplications.AsQueryable();
+            var query = _context.ReferralApplications.AsNoTracking().AsQueryable();
 
             if (vm.QueryType == "MG")
             {
