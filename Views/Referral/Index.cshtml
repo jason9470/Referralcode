@@ -112,6 +112,7 @@
                             <th>結束日期</th>
                             <th>分公司</th>
                             <th>推薦碼</th>
+                            <th>優惠狀態</th>
                         </tr>
                     }
                     else
@@ -124,6 +125,7 @@
                             <th>推薦碼</th>
                             <th>專案開始日</th>
                             <th>專案結束日</th>
+                            <th>優惠狀態</th>
                         </tr>
                     }
                 </thead>
@@ -139,6 +141,21 @@
                                     <td>@(item.EndDate?.ToString("yyyy-MM-dd"))</td>
                                     <td>@(string.IsNullOrEmpty(item.BranchName) ? "部分公司" : item.BranchName)</td>
                                     <td>@item.PartnerReferralCode</td>
+                                    <td>
+                                        @{
+                                            var now = DateTime.Now.Date;
+                                            var status = "進行中";
+                                            if (item.StartDate.HasValue && now < item.StartDate.Value.Date)
+                                            {
+                                                status = "未開始";
+                                            }
+                                            else if (item.EndDate.HasValue && now > item.EndDate.Value.Date)
+                                            {
+                                                status = "已過期";
+                                            }
+                                        }
+                                        <span class="@(status == "進行中" ? "text-success fw-bold" : status == "已過期" ? "text-danger" : "text-muted")">@status</span>
+                                    </td>
                                 </tr>
                             }
                             else
@@ -151,6 +168,21 @@
                                     <td>@item.PartnerReferralCode</td>
                                     <td>@(item.StartDate?.ToString("yyyy/M/d"))</td>
                                     <td>@(item.EndDate?.ToString("yyyy/M/d"))</td>
+                                    <td>
+                                        @{
+                                            var now = DateTime.Now.Date;
+                                            var status = "進行中";
+                                            if (item.StartDate.HasValue && now < item.StartDate.Value.Date)
+                                            {
+                                                status = "未開始";
+                                            }
+                                            else if (item.EndDate.HasValue && now > item.EndDate.Value.Date)
+                                            {
+                                                status = "已過期";
+                                            }
+                                        }
+                                        <span class="@(status == "進行中" ? "text-success fw-bold" : status == "已過期" ? "text-danger" : "text-muted")">@status</span>
+                                    </td>
                                 </tr>
                             }
                         }
@@ -158,7 +190,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="7" class="text-muted py-4">查無符合條件的推薦碼資料。</td>
+                            <td colspan="@(Model.QueryType == "MG" ? 5 : 8)" class="text-muted py-4">查無符合條件的推薦碼資料。</td>
                         </tr>
                     }
                 </tbody>

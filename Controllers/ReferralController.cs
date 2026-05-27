@@ -74,7 +74,7 @@ namespace Referralcode.Controllers
                 }
             }
 
-            vm.Results = await query.OrderByDescending(x => x.CreatedAt).ToListAsync();
+            vm.Results = await query.OrderByDescending(x => x.ProjectType).ThenBy(x => x.BranchName).ThenBy(x => x.StartDate).ToListAsync();
             return View(vm);
         }
 
@@ -137,7 +137,7 @@ namespace Referralcode.Controllers
                 }
             }
 
-            vm.Results = await query.OrderByDescending(x => x.CreatedAt).ToListAsync();
+            vm.Results = await query.OrderByDescending(x => x.ProjectType).ThenBy(x => x.BranchName).ThenBy(x => x.StartDate).ToListAsync();
             return View(vm);
         }
 
