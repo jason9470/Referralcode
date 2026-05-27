@@ -3,6 +3,10 @@ using Referralcode.Data;
 using Referralcode.Models;
 using Referralcode.ViewModels;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Referralcode.Controllers
 {
@@ -22,11 +26,15 @@ namespace Referralcode.Controllers
         [HttpGet]
         public IActionResult Login()
         {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Referral");
+            }
             return View();
         }
 
         [HttpPost]
-        public IActionResult Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -43,6 +51,22 @@ namespace Referralcode.Controllers
 
                 if (account != null || isAdmin)
                 {
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, model.Username)
+                    };
+
+                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    var authProperties = new AuthenticationProperties
+                    {
+                        IsPersistent = true
+                    };
+
+                    await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity),
+                        authProperties);
+
                     // 登入成功，導向推薦碼查詢首頁
                     return RedirectToAction("Index", "Referral");
                 }
@@ -54,7 +78,15 @@ namespace Referralcode.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "Home");
+        }
+
         // 這裡將原本的 Privacy 改成帳號管理平台
+        [Authorize]
         public IActionResult Privacy()
         {
             var accounts = _context.SystemAccounts.OrderByDescending(a => a.CreatedAt).ToList();
@@ -62,6 +94,7 @@ namespace Referralcode.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public IActionResult AddAccount(string username)
         {
             if (!string.IsNullOrWhiteSpace(username))
@@ -86,6 +119,7 @@ namespace Referralcode.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public IActionResult DeleteAccount(int id)
         {
             var account = _context.SystemAccounts.Find(id);
