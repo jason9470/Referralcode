@@ -61,42 +61,32 @@ namespace Referralcode.Controllers
                 {
                     // 根據正式環境邏輯，將帳號前方的0去掉
                     string formattedAccount = model.Username.TrimStart('0');
-                    var whitelistConfig = _configuration["WhitelistAccounts"];
-                    var whitelist = string.IsNullOrEmpty(whitelistConfig) ? Array.Empty<string>() : whitelistConfig.Split(',');
 
-                    // 檢查白名單
-                    if (whitelist.Contains(formattedAccount))
-                    {
-                        isAuthSuccess = true;
-                    }
-                    else
-                    {
-                        // 執行 AD 驗證
-                        var adServer = _configuration["AdSettings:AdServer"];
-                        var adDomainName = _configuration["AdSettings:AdDomainName"];
+                    // 執行 AD 驗證
+                    var adServer = _configuration["AdSettings:AdServer"];
+                    var adDomainName = _configuration["AdSettings:AdDomainName"];
 
-                        if (!string.IsNullOrEmpty(adServer) && !string.IsNullOrEmpty(adDomainName) && adServer != "your.ad.server.address")
+                    if (!string.IsNullOrEmpty(adServer) && !string.IsNullOrEmpty(adDomainName) && adServer != "your.ad.server.address")
+                    {
+                        var g_objAuth = new Referralcode.Services.AuthLib();
+                        g_objAuth.setAdPath("LDAP://" + adServer);
+                        g_objAuth.setDomainName(adDomainName);
+                        g_objAuth.setUsrId(formattedAccount.Trim());
+                        g_objAuth.setUsrPwd(model.Password.Trim());
+
+                        string adResult = g_objAuth.getLdapAuthRes();
+                        if (adResult == "Success")
                         {
-                            var g_objAuth = new Referralcode.Services.AuthLib();
-                            g_objAuth.setAdPath("LDAP://" + adServer);
-                            g_objAuth.setDomainName(adDomainName);
-                            g_objAuth.setUsrId(formattedAccount.Trim());
-                            g_objAuth.setUsrPwd(model.Password.Trim());
-
-                            string adResult = g_objAuth.getLdapAuthRes();
-                            if (adResult == "Success")
-                            {
-                                isAuthSuccess = true;
-                            }
-                            else
-                            {
-                                errorMessage = adResult.Replace("\n", "").Replace("\r", "");
-                            }
+                            isAuthSuccess = true;
                         }
                         else
                         {
-                            // 如果尚未設定 AD 伺服器資訊，則退回預設的登入失敗
+                            errorMessage = adResult.Replace("\n", "").Replace("\r", "");
                         }
+                    }
+                    else
+                    {
+                        // 如果尚未設定 AD 伺服器資訊，則退回預設的登入失敗
                     }
                 }
 
