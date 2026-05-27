@@ -43,21 +43,9 @@ namespace Referralcode.Controllers
                 string errorMessage = "帳號或密碼錯誤";
 
                 // 先比對資料庫是否存在該帳號密碼
-                var account = await _context.SystemAccounts.FirstOrDefaultAsync(a => a.Username == model.Username && a.Password == model.Password);
+                var account = await _context.SystemAccounts.FirstOrDefaultAsync(a => a.Username == model.Username);
 
-                // 從設定檔讀取預設管理員帳號與加密的密碼
-                var adminUsername = _configuration["AdminCredentials:Username"];
-                var adminEncryptedPassword = _configuration["AdminCredentials:EncryptedPassword"];
-                var adminDecryptedPassword = string.IsNullOrEmpty(adminEncryptedPassword) ? "" : Referralcode.Helpers.EncryptionHelper.Decrypt(adminEncryptedPassword);
-
-                // 驗證是否為預設管理員
-                bool isAdmin = model.Username == adminUsername && model.Password == adminDecryptedPassword;
-
-                if (account != null || isAdmin)
-                {
-                    isAuthSuccess = true;
-                }
-                else
+                if(account != null)
                 {
                     // 根據正式環境邏輯，將帳號前方的0去掉
                     string formattedAccount = model.Username.TrimStart('0');
@@ -84,10 +72,18 @@ namespace Referralcode.Controllers
                             errorMessage = adResult.Replace("\n", "").Replace("\r", "");
                         }
                     }
-                    else
-                    {
-                        // 如果尚未設定 AD 伺服器資訊，則退回預設的登入失敗
-                    }
+                }
+                else
+                {
+                    // 從設定檔讀取預設管理員帳號與加密的密碼
+                    var adminUsername = _configuration["AdminCredentials:Username"];
+                    var adminEncryptedPassword = _configuration["AdminCredentials:EncryptedPassword"];
+                    var adminDecryptedPassword = string.IsNullOrEmpty(adminEncryptedPassword) ? "" : Referralcode.Helpers.EncryptionHelper.Decrypt(adminEncryptedPassword);
+
+                    // 驗證是否為預設管理員
+                    bool isAdmin = model.Username == adminUsername && model.Password == adminDecryptedPassword;
+                    if (isAdmin)
+                        isAuthSuccess = true;
                 }
 
                 if (isAuthSuccess)
@@ -145,8 +141,7 @@ namespace Referralcode.Controllers
                 {
                     _context.SystemAccounts.Add(new SystemAccount
                     {
-                        Username = username,
-                        Password = "123456" // 預設密碼 123456
+                        Username = username.Trim(),
                     });
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = $"帳號 {username} 新增成功！";
