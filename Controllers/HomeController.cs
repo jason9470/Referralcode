@@ -66,7 +66,7 @@ namespace Referralcode.Controllers
                     var adServer = _configuration["AdSettings:AdServer"];
                     var adDomainName = _configuration["AdSettings:AdDomainName"];
 
-                    if (!string.IsNullOrEmpty(adServer) && !string.IsNullOrEmpty(adDomainName) && adServer != "your.ad.server.address")
+                    if (!string.IsNullOrEmpty(adServer) && !string.IsNullOrEmpty(adDomainName))
                     {
                         var g_objAuth = new Referralcode.Services.AuthLib();
                         g_objAuth.setAdPath("LDAP://" + adServer);
