@@ -10,11 +10,13 @@ namespace Referralcode.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public HomeController(ILogger<HomeController> logger, AppDbContext context)
+        public HomeController(ILogger<HomeController> logger, AppDbContext context, IConfiguration configuration)
         {
             _logger = logger;
             _context = context;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -31,8 +33,15 @@ namespace Referralcode.Controllers
                 // 先比對資料庫是否存在該帳號密碼
                 var account = _context.SystemAccounts.FirstOrDefault(a => a.Username == model.Username && a.Password == model.Password);
 
-                // 保留一個萬用的後門或是如果剛建好資料庫沒有帳號的時候可以使用 (依需求可以移除)
-                if (account != null || (model.Username == "admin" && model.Password == "123456"))
+                // 從設定檔讀取預設管理員帳號與加密的密碼
+                var adminUsername = _configuration["AdminCredentials:Username"];
+                var adminEncryptedPassword = _configuration["AdminCredentials:EncryptedPassword"];
+                var adminDecryptedPassword = string.IsNullOrEmpty(adminEncryptedPassword) ? "" : Referralcode.Helpers.EncryptionHelper.Decrypt(adminEncryptedPassword);
+
+                // 驗證是否為預設管理員
+                bool isAdmin = model.Username == adminUsername && model.Password == adminDecryptedPassword;
+
+                if (account != null || isAdmin)
                 {
                     // 登入成功，導向推薦碼查詢首頁
                     return RedirectToAction("Index", "Referral");
