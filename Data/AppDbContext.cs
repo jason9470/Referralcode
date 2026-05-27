@@ -10,5 +10,6 @@ namespace Referralcode.Data
         }
 
         public DbSet<ReferralApplication> ReferralApplications { get; set; }
+        public DbSet<SystemAccount> SystemAccounts { get; set; }
     }
 }

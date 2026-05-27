@@ -1,6 +1,95 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
-}
-<h1>@ViewData["Title"]</h1>
+@model IEnumerable<Referralcode.Models.SystemAccount>
 
-<p>Use this page to detail your site's privacy policy.</p>
+@{
+    ViewData["Title"] = "帳號管理平台";
+}
+
+<div class="container mt-4 pb-5">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+        <h3 class="mb-0 text-dark fw-bold">
+            <i class="bi bi-people-fill text-primary"></i> 帳號管理平台
+        </h3>
+        <nav class="nav">
+            <a class="nav-link text-muted px-3" href="/Referral/Index">返回推薦碼查詢</a>
+        </nav>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- 新增帳號表單 -->
+    <div class="card mb-4 border shadow-sm">
+        <div class="card-header bg-light fw-bold text-dark">
+            <i class="bi bi-person-plus-fill me-1"></i> 新增帳號
+        </div>
+        <div class="card-body">
+            <form asp-action="AddAccount" method="post" class="row align-items-end">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <label class="form-label text-muted fw-bold mb-1">帳號名稱</label>
+                    <input type="text" name="username" class="form-control" placeholder="請輸入新帳號名稱" required />
+                </div>
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-primary px-4 fw-bold w-100 w-md-auto" style="background-color: #0d2b54; border-color: #0d2b54;">
+                        新增
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 帳號列表 -->
+    <div class="card border shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover text-center align-middle mb-0">
+                    <thead class="table-dark" style="background-color: #000; color: #fff;">
+                        <tr>
+                            <th style="width: 10%;">ID</th>
+                            <th>帳號名稱</th>
+                            <th>建立時間</th>
+                            <th style="width: 15%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Id</td>
+                                    <td class="fw-bold">@item.Username</td>
+                                    <td>@item.CreatedAt.ToString("yyyy/MM/dd HH:mm:ss")</td>
+                                    <td>
+                                        <form asp-action="DeleteAccount" method="post" onsubmit="return confirm('確定要刪除帳號 @item.Username 嗎？');">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm btn-danger fw-bold px-3">刪除</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-muted py-4">目前沒有任何帳號資料。</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
