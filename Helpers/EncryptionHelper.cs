@@ -1,7 +1,7 @@
 using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace Referralcode.Helpers
 {
@@ -20,23 +20,23 @@ namespace Referralcode.Helpers
             if (string.IsNullOrEmpty(plainText))
                 return plainText;
 
-            using var aes = Aes.Create();
-            aes.Key = _key;
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
-            aes.GenerateIV();
-            var iv = aes.IV;
+            byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
+            byte[] nonce = new byte[AesGcm.NonceByteSizes.MaxSize]; // 12 bytes
+            RandomNumberGenerator.Fill(nonce);
 
-            using var encryptor = aes.CreateEncryptor(aes.Key, iv);
-            using var ms = new MemoryStream();
-            ms.Write(iv, 0, iv.Length); // 將 IV 放在加密資料的最前方
+            byte[] cipherBytes = new byte[plainBytes.Length];
+            byte[] tag = new byte[AesGcm.TagByteSizes.MaxSize]; // 16 bytes
 
-            using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-            using (var sw = new StreamWriter(cs))
-            {
-                sw.Write(plainText);
-            }
-            return Convert.ToBase64String(ms.ToArray());
+            using var aesGcm = new AesGcm(_key, AesGcm.TagByteSizes.MaxSize);
+            aesGcm.Encrypt(nonce, plainBytes, cipherBytes, tag);
+
+            // Format: [Nonce (12)] + [Tag (16)] + [Cipher]
+            byte[] result = new byte[nonce.Length + tag.Length + cipherBytes.Length];
+            Buffer.BlockCopy(nonce, 0, result, 0, nonce.Length);
+            Buffer.BlockCopy(tag, 0, result, nonce.Length, tag.Length);
+            Buffer.BlockCopy(cipherBytes, 0, result, nonce.Length + tag.Length, cipherBytes.Length);
+
+            return Convert.ToBase64String(result);
         }
 
         public string Decrypt(string cipherText)
@@ -47,29 +47,30 @@ namespace Referralcode.Helpers
             try
             {
                 var fullCipher = Convert.FromBase64String(cipherText);
-                using var aes = Aes.Create();
-                aes.Key = _key;
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.PKCS7;
+                
+                int nonceSize = AesGcm.NonceByteSizes.MaxSize; // 12 bytes
+                int tagSize = AesGcm.TagByteSizes.MaxSize; // 16 bytes
 
-                var ivSize = aes.BlockSize / 8;
-                if (fullCipher.Length < ivSize) return string.Empty;
+                if (fullCipher.Length < nonceSize + tagSize) return string.Empty;
 
-                var iv = new byte[ivSize];
-                var cipher = new byte[fullCipher.Length - ivSize];
+                byte[] nonce = new byte[nonceSize];
+                byte[] tag = new byte[tagSize];
+                byte[] cipherBytes = new byte[fullCipher.Length - nonceSize - tagSize];
 
-                Array.Copy(fullCipher, 0, iv, 0, ivSize);
-                Array.Copy(fullCipher, ivSize, cipher, 0, cipher.Length);
+                Buffer.BlockCopy(fullCipher, 0, nonce, 0, nonceSize);
+                Buffer.BlockCopy(fullCipher, nonceSize, tag, 0, tagSize);
+                Buffer.BlockCopy(fullCipher, nonceSize + tagSize, cipherBytes, 0, cipherBytes.Length);
 
-                using var decryptor = aes.CreateDecryptor(aes.Key, iv);
-                using var ms = new MemoryStream(cipher);
-                using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
-                using var sr = new StreamReader(cs);
-                return sr.ReadToEnd();
+                byte[] plainBytes = new byte[cipherBytes.Length];
+
+                using var aesGcm = new AesGcm(_key, AesGcm.TagByteSizes.MaxSize);
+                aesGcm.Decrypt(nonce, cipherBytes, tag, plainBytes);
+
+                return Encoding.UTF8.GetString(plainBytes);
             }
             catch
             {
-                // 如果解密失敗（例如舊格式），回傳空字串或處理錯誤
+                // 如果解密失敗（例如舊的 CBC 格式或毀損），回傳空字串
                 return string.Empty;
             }
         }
