@@ -11,10 +11,6 @@ namespace Referralcode.Models
         [StringLength(50)]
         public string Username { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(50)]
-        public string Password { get; set; } = string.Empty;
-
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }

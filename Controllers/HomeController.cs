@@ -60,7 +60,7 @@ namespace Referralcode.Controllers
                         g_objAuth.setAdPath("LDAP://" + adServer);
                         g_objAuth.setDomainName(adDomainName);
                         g_objAuth.setUsrId(formattedAccount.Trim());
-                        g_objAuth.setUsrPwd(model.Password.Trim());
+                        g_objAuth.setUsrPwd(model.Pass.Trim());
 
                         string adResult = g_objAuth.getLdapAuthRes();
                         if (adResult == "Success")
@@ -77,11 +77,11 @@ namespace Referralcode.Controllers
                 {
                     // 從設定檔讀取預設管理員帳號與加密的密碼
                     var adminUsername = _configuration["AdminCredentials:Username"];
-                    var adminEncryptedPassword = _configuration["AdminCredentials:EncryptedPassword"];
-                    var adminDecryptedPassword = string.IsNullOrEmpty(adminEncryptedPassword) ? "" : Referralcode.Helpers.EncryptionHelper.Decrypt(adminEncryptedPassword);
+                    var adminEncrypted = _configuration["AdminCredentials:EncryptedPassword"];
+                    var adminDecrypted = string.IsNullOrEmpty(adminEncrypted) ? "" : Referralcode.Helpers.EncryptionHelper.Decrypt(adminEncrypted);
 
                     // 驗證是否為預設管理員
-                    bool isAdmin = model.Username == adminUsername && model.Password == adminDecryptedPassword;
+                    bool isAdmin = model.Username == adminUsername && model.Pass == adminDecrypted;
                     if (isAdmin)
                         isAuthSuccess = true;
                 }
