@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Referralcode.Helpers;
 
 namespace Referralcode.Controllers
 {
@@ -16,12 +17,14 @@ namespace Referralcode.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly EncryptionHelper _encryptionHelper;
 
-        public HomeController(ILogger<HomeController> logger, AppDbContext context, IConfiguration configuration)
+        public HomeController(ILogger<HomeController> logger, AppDbContext context, IConfiguration configuration, EncryptionHelper encryptionHelper)
         {
             _logger = logger;
             _context = context;
             _configuration = configuration;
+            _encryptionHelper = encryptionHelper;
         }
 
         [HttpGet]
@@ -77,8 +80,8 @@ namespace Referralcode.Controllers
                 {
                     // 從設定檔讀取預設管理員帳號與加密的密碼
                     var adminUsername = _configuration["AdminCredentials:Username"];
-                    var adminEncrypted = _configuration["AdminCredentials:EncryptedPassword"];
-                    var adminDecrypted = string.IsNullOrEmpty(adminEncrypted) ? "" : Referralcode.Helpers.EncryptionHelper.Decrypt(adminEncrypted);
+                    var adminEncrypted = _configuration["AdminCredentials:Encrypted"];
+                    var adminDecrypted = string.IsNullOrEmpty(adminEncrypted) ? "" : _encryptionHelper.Decrypt(adminEncrypted);
 
                     // 驗證是否為預設管理員
                     bool isAdmin = model.Username == adminUsername && model.Pass == adminDecrypted;
